@@ -1,0 +1,14 @@
+# config.toml
+
+[dataset]
+corpus_path = "data/corpora/wiki"
+max_needles = 30
+
+
+[llm]
+model = "qwen3.5:0.8b"
+temperature = 0.0
+
+[experiment]
+mode = "verbatim" # verbatim | paraphrase | query
+top_k = 10

@@ -1,0 +1,9 @@
+{
+    "typeCheckingMode": "recommended",
+    "reportAny": false,
+    "reportExplicitAny": false,
+    "reportUnannotatedClassAttribute": false,
+    "reportUnusedCallResult": false,
+    "reportUnknownMemberType": false,
+    "reportMissingTypeStubs": false
+}

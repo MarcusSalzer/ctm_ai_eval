@@ -1,0 +1,61 @@
+[project]
+name = "ctm-ai-eval"
+version = "0.1.0"
+description = "Tools for evaluating and improving Course-material-ai"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "faiss-cpu>=1.13.2",
+    "ipykernel>=7.2.0",
+    "nbformat>=5.10.4",
+    "openai>=2.20.0",
+    "pandas>=2.3.3",
+    "pip>=26.0.1",
+    "plotly>=6.6.0",
+    "polars>=1.38.1",
+    "requests>=2.33.1",
+    "rich>=15.0.0",
+    "statsmodels>=0.14.6",
+    "tqdm>=4.67.3",
+]
+
+[dependency-groups]
+dev = ["import-linter[ui]>=2.11", "pytest>=9.0.3"]
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+[tool.ruff.lint]
+select = ["F", "UP", "SIM", "E", "I", "B"]
+ignore = [
+    "B905", # zip strict
+]
+
+
+[tool.importlinter]
+include_external_packages = true
+
+root_packages = ["ctm-ai-eval"]
+
+# =============== Importlinter ===============
+
+[[tool.importlinter.contracts]]
+
+[[tool.importlinter.contracts]]
+name = "Task specific submodules are indpendent."
+type = "independence"
+modules = ["ctm-ai-eval.qa", "ctm-ai-eval.rag"]
+
+[[tool.importlinter.contracts]]
+name = "Don't import scripts to src"
+type = "forbidden"
+source_modules = ["ctm-ai-eval.*"]
+forbidden_modules = ["scripts"]
+
+
+[[tool.importlinter.contracts]]
+name = "Minimal acyclic siblings contract"
+type = "acyclic_siblings"
+ancestors = ["ctm-ai-eval"]

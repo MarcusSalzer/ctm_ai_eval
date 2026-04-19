@@ -1,0 +1,10 @@
+Question:
+{question}
+
+Expected answer:
+{expected_answer}
+
+Student answer:
+{answer}
+
+Score the student answer according to the rubric.

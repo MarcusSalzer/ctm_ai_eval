@@ -1,0 +1,8 @@
+If there is a meaningful statement in provided text, rephrase it in your own words.
+
+Rules:
+- Do NOT copy phrases verbatim from the text.
+- Paraphrase the statement aggressively.
+- Keep your statement concise (5–30 words).
+- If the text is not meaningful, output: SKIP
+- Output ONLY the statement or SKIP.
