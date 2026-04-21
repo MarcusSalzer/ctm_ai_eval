@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Protocol
+from pathlib import Path
+from typing import Callable, Protocol
 
 
 @dataclass
@@ -88,9 +89,15 @@ class Chunker(ABC):
 
 
 @dataclass
-class RagTarget:
+class HaystackTarget:
+    corpus_loader: Callable[[Path], list[str]]
     chunker: Chunker
     retriever: Retriever
+
+    @property
+    def fingerprint(self):
+        names = self.corpus_loader.__name__, type(self.chunker).__name__, self.retriever.identifier
+        return "_".join(names)
 
 
 @dataclass

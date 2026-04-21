@@ -46,6 +46,7 @@ MAX_NEEDLES = 300
 TARGETS: list[Retriever] = [
     DummyRetriever(),
     FaissRetriever(Embedder("nomic-embed-text")),
+    FaissRetriever(Embedder("qwen3-embedding:4b")),
     FaissRetriever(Embedder("qwen3-embedding:0.6b")),
     FaissRetriever(Embedder("all-minilm:33m")),
     FaissRetriever(Embedder("embeddinggemma")),

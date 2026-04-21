@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from pydantic import BaseModel
+
+from ctm_ai_eval.common_config import LlmConfig
+
 
 @dataclass
 class DatasetConfig:
@@ -33,12 +37,13 @@ class ExperimentConfig:
     top_k: int
 
 
-@dataclass
-class RagExperimentConfig:
+class RagExperimentConfig(BaseModel):
     dataset: DatasetConfig
+    llm: LlmConfig
+    embedders: list[str]
 
 
-def load_config(path: str = "config.toml") -> RagExperimentConfig:
+def load_experiment_config(path: str = "config.toml") -> RagExperimentConfig:
     with open(path, "rb") as f:
         raw = tomllib.load(f)
 
@@ -47,4 +52,6 @@ def load_config(path: str = "config.toml") -> RagExperimentConfig:
             corpus_path=Path(raw["dataset"]["corpus_path"]).expanduser(),
             max_needles=raw["dataset"]["max_needles"],
         ),
+        llm=LlmConfig(**raw["llm"]),
+        embedders=raw["targets"]["embedders"],
     )

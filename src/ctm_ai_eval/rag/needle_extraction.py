@@ -8,8 +8,15 @@ import numpy as np
 import requests
 import tqdm
 
+from ctm_ai_eval.common_config import LlmConfig
 from ctm_ai_eval.rag import text_processing
-from ctm_ai_eval.rag.datamodels import ChunkCoupledNeedle, RagChunk, SpanToken, Tokenizer
+from ctm_ai_eval.rag.datamodels import (
+    ChunkCoupledNeedle,
+    RagChunk,
+    SpanNeedle,
+    SpanToken,
+    Tokenizer,
+)
 from ctm_ai_eval.rich_print import CONS
 
 
@@ -41,7 +48,7 @@ class LlmNeedleSampler:
     system_prompt: str
     user_template: str
     model: str = "gemma3:270m"
-    chat_url: str = "http://localhost:11434/v1/chat/completions"
+    chat_url: str = "http://localhost:11434/api/chat"
 
     # ---- public API ----
 
@@ -70,7 +77,7 @@ class LlmNeedleSampler:
         prompt = self.user_template.format(chunk=chunk_text)
 
         r = requests.post(
-            "http://localhost:11434/api/chat",
+            self.chat_url,
             json={
                 "model": self.model,
                 "messages": [
@@ -140,11 +147,77 @@ def sample_needles_llm(
 
 
 @dataclass
-class SpanNeedle:
-    doc_id: int
-    start_char: int
-    end_char: int
-    query: str
+class SpanRephraser:
+    """Rephrase or skip."""
+
+    system_prompt: str
+    user_template: str
+    llm: LlmConfig
+    chat_url: str = "http://localhost:11434/api/chat"
+
+    # ---- public API ----
+
+    def sample_all(
+        self,
+        raw_needles: list[SpanNeedle],
+        max_count: int | None = None,
+    ) -> Iterator[SpanNeedle]:
+
+        count = 0
+
+        for n in raw_needles:
+            query = self._generate(n.query)
+
+            if query is None:
+                continue
+
+            yield SpanNeedle(
+                doc_id=n.doc_id,
+                start_char=n.start_char,
+                end_char=n.end_char,
+                query=query,
+            )
+            count += 1
+            if max_count and count > max_count:
+                break  # collected enough, stop
+
+    # ---- LLM call ----
+
+    def _generate(self, chunk_text: str) -> str | None:
+        prompt = self.user_template.format(chunk=chunk_text)
+
+        r = requests.post(
+            self.chat_url,
+            json={
+                "model": self.llm.model,
+                "temperature": self.llm.temperature,
+                "think": self.llm.think,
+                "messages": [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "stream": False,
+            },
+        )
+        r.raise_for_status()
+
+        text = r.json()["message"]["content"]
+        assert isinstance(text, str), f"unexpected message content: {type(text)}"
+        return self._postprocess(text)
+
+    # ---- output filtering ----
+
+    def _postprocess(self, text: str) -> str | None:
+        text = text.strip()
+
+        if not text:
+            return None
+
+        # allow model to skip
+        if text.lower() in {"none", "skip", "n/a", "skipping"}:
+            return None
+
+        return text
 
 
 def sample_span_needles_verbatim(

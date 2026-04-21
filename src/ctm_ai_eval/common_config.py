@@ -5,4 +5,4 @@ from dataclasses import dataclass
 class LlmConfig:
     model: str
     temperature: float
-    sys_prompt_name: str
+    think: bool

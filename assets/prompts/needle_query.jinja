@@ -1,14 +1,9 @@
 Text:
 {chunk}
 
-Write a natural search query. Output only the query or SKIP.
+If meaningful, write a question that the text can answer. Output only the question or SKIP.
 
+Example:
 
-Rules:
-- The query must be answerable using the provided text.
-- Do NOT copy phrases verbatim from the text.
-- Write the query in your own words.
-- Keep the query concise (5–15 words).
-- The query should be meaningful without additional context (e.g. "what does the given code do?" is not meaningful)
-- If the text is not meaningful or you cannot come up with a query fulfilling the conditions, output: SKIP
-- Output ONLY the query or SKIP.
+- 'What is the output of the provided Python code?' is NOT a good query, since it refers to the text.
+- 'Which fractions can be represented without round-off error as 64-bit floating-point numbers?' is a good query, since it can be answered, and covers a general topic
