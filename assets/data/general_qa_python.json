@@ -1,0 +1,66 @@
+[
+  {
+    "example_id": "q1",
+    "author": "marcus",
+    "question": "What is the value of `0.1+0.2` in python?",
+    "context": "",
+    "answer": "0.30000000000000004",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "q2",
+    "author": "marcus",
+    "question": "Is there a maximum value for integers in python?",
+    "context": "",
+    "answer": "No, python integers can be arbitrarily large.",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "q3",
+    "author": "marcus",
+    "question": "What happens when this example is run?",
+    "context": "```\nx='python'\nx[0]='P'\n```",
+    "answer": "A `TypeError` is raised.",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "q4",
+    "author": "marcus",
+    "question": "What does this expression return?",
+    "context": "```\nlen(set(\"hello\"))\n```",
+    "answer": "4",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "q5",
+    "author": "marcus",
+    "question": "What does the `zip(list1, list2)` do in python?",
+    "context": "",
+    "answer": "It returns an iterable of tuples `(x, y)`, where `x` is from `list1` and `y` the corresponding element from `list2`",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "q6",
+    "author": "marcus",
+    "question": "What does this print?",
+    "context": "```\nprint(0 or 1 or 2)\n```",
+    "answer": "1",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "cf1",
+    "author": "marcus",
+    "question": "Which is immutable, list or tuple?",
+    "context": "",
+    "answer": "tuple is immutable.",
+    "source": "fuhrer-p52"
+  },
+  {
+    "example_id": "cf2",
+    "author": "marcus",
+    "question": "What are the three main ways to loop over dictionaries?",
+    "context": "",
+    "answer": "- by keys: `for k in d.keys()`, or `for k in d`\n- by value: `for v in d.values`\n- by items (key-value pairs), `for item in d.items()`",
+    "source": "fuhrer-p54"
+  }
+]

@@ -75,7 +75,7 @@ class FaissRetriever(Retriever):
 
     @property
     @override
-    def identifier(self) -> str:
+    def fingerprint(self) -> str:
         return f"faiss_{self.embedder.model}".replace(".", "")
 
     @override

@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Protocol
+
+from ctm_ai_eval.utils.hashing import stable_hash
 
 
 @dataclass
@@ -11,10 +13,6 @@ class SpanToken:
     text: str
     start: int
     end: int
-
-
-class Tokenizer(Protocol):
-    def __call__(self, text: str) -> list[SpanToken]: ...
 
 
 @dataclass
@@ -66,7 +64,7 @@ class Retriever(ABC):
 
     @property
     @abstractmethod
-    def identifier(self) -> str: ...
+    def fingerprint(self) -> str: ...
 
     @abstractmethod
     def ingest(self, chunks: list[RagChunk]): ...
@@ -84,20 +82,35 @@ class Chunker(ABC):
     @abstractmethod
     def _chunk(self, docs: list[str]) -> list[RagChunk]: ...
 
+    @property
+    @abstractmethod
+    def fingerprint(self) -> str: ...
+
     def __call__(self, docs: list[str]):
         return self._chunk(docs)
 
 
 @dataclass
 class HaystackTarget:
-    corpus_loader: Callable[[Path], list[str]]
+    loader: Callable[[Path], list[str]]
     chunker: Chunker
     retriever: Retriever
 
     @property
-    def fingerprint(self):
-        names = self.corpus_loader.__name__, type(self.chunker).__name__, self.retriever.identifier
-        return "_".join(names)
+    def fingerprint_dict(self) -> dict[str, str]:
+        return {
+            "loader": self.loader.__name__,
+            "chunker": self.chunker.fingerprint,
+            "retriever": self.retriever.fingerprint,
+        }
+
+    @property
+    def hash_id(self):
+        return stable_hash(self.fingerprint_dict, length=16)
+
+    @property
+    def fingerprint_tuple(self):
+        return tuple(self.fingerprint_dict.values())
 
 
 @dataclass

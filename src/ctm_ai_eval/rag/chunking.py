@@ -1,14 +1,20 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from ctm_ai_eval.rag.datamodels import Chunker, RagChunk, Tokenizer
+from ctm_ai_eval.rag.datamodels import Chunker, RagChunk, SpanToken
 
 
 @dataclass
-class NaiveChunker(Chunker):
+class CharChunker(Chunker):
     """Simplest possible chunking."""
 
     len_chars: int = 200
+
+    @property
+    @override
+    def fingerprint(self) -> str:
+        return f"{type(self).__name__}({self.len_chars})"
 
     @override
     def _chunk(self, docs: list[str]):
@@ -38,7 +44,12 @@ class TokenChunker(Chunker):
     """Simple chunking."""
 
     len_tokens: int  # for example 2 sentences, 70 words, 300 chars
-    tokenizer: Tokenizer
+    tokenizer: Callable[[str], list[SpanToken]]
+
+    @property
+    @override
+    def fingerprint(self) -> str:
+        return f"{(self.tokenizer.__name__)}({self.len_tokens})"
 
     @override
     def _chunk(self, docs: list[str]):

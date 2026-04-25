@@ -34,7 +34,7 @@ def _main():
     )
     print(f"{len(needles_verbatim)} verbatim needles")
 
-    pl.DataFrame([asdict(r) for r in needles_verbatim]).write_parquet(OUTDIR / "verbatim.parquet")
+    pl.DataFrame([asdict(r) for r in needles_verbatim]).write_ndjson(OUTDIR / "verbatim.ndjson")
 
     # LLM-needles derived from verbatim needles.
     for mode in ["query", "paraphrase"]:
@@ -42,13 +42,13 @@ def _main():
         prompt_sys = (PROMPT_DIR / f"needle_{mode}_sys.txt").read_text()
         prompt_user = (PROMPT_DIR / f"needle_{mode}.jinja").read_text()
 
-        model = SpanRephraser(prompt_sys, prompt_user, CONFIG.llm)
+        model = SpanRephraser(prompt_sys, prompt_user, CONFIG.needle_llm)
         results: list[SpanNeedle] = []
         for n in model.sample_all(needles_verbatim):
             print(n)
             results.append(n)
 
-        pl.DataFrame([asdict(r) for r in results]).write_parquet(OUTDIR / f"{mode}.parquet")
+        pl.DataFrame([asdict(r) for r in results]).write_ndjson(OUTDIR / f"{mode}.ndjson")
 
     Path(OUTDIR / "cfg.json").write_text(CONFIG.model_dump_json(indent=1))
 

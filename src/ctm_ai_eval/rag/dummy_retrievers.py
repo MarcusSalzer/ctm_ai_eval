@@ -10,7 +10,7 @@ from ctm_ai_eval.rag.datamodels import RagChunk, RetrievalResult, Retriever
 class DummyRetriever(Retriever):
     @property
     @override
-    def identifier(self) -> str:
+    def fingerprint(self) -> str:
         return "dummy"
 
     @override
@@ -32,7 +32,7 @@ class SimpleExactRetriever(Retriever):
 
     @property
     @override
-    def identifier(self) -> str:
+    def fingerprint(self) -> str:
         return f"exact{self.weight_lcs}".replace(".", "")
 
     @override

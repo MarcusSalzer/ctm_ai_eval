@@ -6,7 +6,7 @@ from typing import override
 import requests
 from pydantic import BaseModel
 
-from ai_eval.eval_datamodels import ApiEvalResponse
+from ctm_ai_eval.qa.datamodels import ApiEvalResponse
 
 
 class ChatTargetConfig(BaseModel):

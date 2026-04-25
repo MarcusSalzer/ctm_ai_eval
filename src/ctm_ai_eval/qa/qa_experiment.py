@@ -5,17 +5,18 @@ from pathlib import Path
 
 import tqdm
 
-from ctm_ai_eval.qa.datamodels import EvalTrace
+from ctm_ai_eval.qa.datamodels import EvalTrace, QaQuestion
+from ctm_ai_eval.rich_print import CONS
+from ctm_ai_eval.utils import io_util
 
 sys.path.append(".")
 
 
-from ctm_ai_eval import io_util
 from ctm_ai_eval.qa import targets
 
 SERVER_URL = "http://localhost:5000"
 DATASET_NAME = "general_qa_python"
-SYS_PROMPT_DIR = Path("./system_prompts")
+SYS_PROMPT_DIR = Path("./assets/prompts/chat_system_prompts")
 
 TARGETS = [
     targets.OllamaChatTarget(
@@ -32,20 +33,6 @@ TARGETS = [
             system_prompt_id="concise",
         ),
     ),
-    targets.OllamaChatTarget(
-        targets.ChatTargetConfig(
-            model="qwen3.5:4b",
-            temperature=0.0,
-            system_prompt_id="concise",
-        ),
-    ),
-    targets.OllamaChatTarget(
-        targets.ChatTargetConfig(
-            model="gemma3:1b-it-qat",
-            temperature=0.9,
-            system_prompt_id="concise",
-        ),
-    ),
 ]
 
 
@@ -56,8 +43,8 @@ def run_eval(
     # load system prompts
     sys_prompts = {p.stem: p.read_text() for p in SYS_PROMPT_DIR.glob("*.txt")}
     # load dataset
-    data_file = Path(f"ai_eval/data/{dataset_name}.json")
-    examples = io_util.load_qas_list_json(data_file)
+    data_file = Path(f"./assets/data/{dataset_name}.json")
+    examples = io_util.load_list_json_generic(data_file, QaQuestion)
 
     # where to store results
     run_id = datetime.datetime.now(datetime.UTC).isoformat()
@@ -89,13 +76,13 @@ def run_eval(
         io_util.append_ndjson(traces_file, [r])
 
 
-def main() -> None:
-    """Main function to run the custom QA evaluation."""
+def qa_trace() -> None:
+    """Main function to run the QA trace collection."""
 
     for targ in TARGETS:
-        print(targ)
+        CONS.print(targ)
         run_eval(DATASET_NAME, targ)
 
 
 if __name__ == "__main__":
-    main()
+    qa_trace()

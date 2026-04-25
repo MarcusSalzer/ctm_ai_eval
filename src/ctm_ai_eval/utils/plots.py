@@ -18,7 +18,7 @@ TITLES: dict[tuple[PlotCol, ...], str] = {
 
 def set_template() -> None:
 
-    t = pio.templates["plotly_dark"]
+    t = pio.templates["plotly_dark"]  # pyright: ignore[reportUnknownVariableType]
     t.update(
         layout={"font_family": "Comic Mono", "width": 600, "autosize": False},
     )
@@ -97,26 +97,30 @@ def agg_mean_scatter(
     )
 
 
-def rag_target_recall_avg(df: pl.DataFrame):
+def rag_target_recall_avg(df: pl.DataFrame, name_col: str = "target"):
     """Comparison of recall"""
-    ks = [1, 5, 10]
+    recal_cols = [c for c in df.columns if "recall" in c]
     return go.Figure(
         [
-            go.Scatter(x=ks, y=[r[f"recall@{k}_chunk"] for k in ks], name=r["target"])
+            go.Scatter(
+                x=recal_cols,
+                y=[r[c] for c in recal_cols],
+                name=r[name_col],
+            )
             for r in df.iter_rows(named=True)
         ],
         layout=go.Layout(
-            xaxis=go.layout.XAxis(title="k", tickvals=ks),
+            xaxis=go.layout.XAxis(title="k"),
             yaxis_title="recall",
             title="How likely is 'correct' match in top-k? (ideal=1.0)",
         ),
     )
 
 
-def reciprocal_rank_bar(df: pl.DataFrame, keys: tuple[str, ...] = ("chunk", "doc")):
+def reciprocal_rank_bar(df: pl.DataFrame, x: str = "run_id"):
     """Comparison of rr"""
     return go.Figure(
-        [go.Bar(x=df["target"], y=df[f"rr_{k}"], name=k) for k in keys],
+        go.Bar(x=df[x], y=df["rr"]),
         layout=go.Layout(
             xaxis_title="Target",
             yaxis_title="Reciprocal rank",
@@ -125,11 +129,12 @@ def reciprocal_rank_bar(df: pl.DataFrame, keys: tuple[str, ...] = ("chunk", "doc
     )
 
 
-def scatter_recall_rr(df: pl.DataFrame, k: int = 5):
+def scatter_recall_rr(df: pl.DataFrame, color_by: str = "run_id", k: int = 5):
 
     return px.scatter(
         df.with_columns(pl.col("t_retr").round(2)),
-        x=f"recall@{k}_chunk",
-        y="rr_chunk",
-        color="target",
-    ).update_traces(marker_size=15)
+        x=f"recall@{k}",
+        y="rr",
+        color=color_by,
+        hover_data=["chunker", "retriever"],
+    ).update_traces(marker_size=8)

@@ -1,42 +1,31 @@
-import itertools
-from pathlib import Path
+"""Main entry point for running some experiment."""
 
-import polars as pl
+import sys
 
-from ctm_ai_eval.io_util import load_all_md
-from ctm_ai_eval.rag import text_processing
-from ctm_ai_eval.rag.ai_retriever import Embedder, FaissRetriever
-from ctm_ai_eval.rag.chunking import TokenChunker
-from ctm_ai_eval.rag.config import load_experiment_config
-from ctm_ai_eval.rag.datamodels import HaystackTarget, SpanNeedle
-from ctm_ai_eval.rag.dummy_retrievers import DummyRetriever, SimpleExactRetriever
-from ctm_ai_eval.rag.haystack_experiment import run_haystack_experiment
+from ctm_ai_eval.qa.eval_runs import qa_compute_metrics
+from ctm_ai_eval.qa.qa_experiment import qa_trace
+from ctm_ai_eval.rag.haystack_experiment import haystack_chunk_size, haystack_retrievers
+from ctm_ai_eval.rich_print import CONS
 
-NEEDLE_DIR = Path("./tmp/needles/")
+EXPERIMENTS = {
+    # rag
+    "haystack-retrievers": haystack_retrievers,
+    "haystack-chunksize": haystack_chunk_size,
+    # qa
+    "qa-trace": qa_trace,
+    "qa-metrics": qa_compute_metrics,
+}
 
 
 def _main():
-    cfg = load_experiment_config()
+    if len(sys.argv) < 2:
+        print(f"please specify an experiment: {list(EXPERIMENTS.keys())}")
+        sys.exit(1)
 
-    retrievers = [
-        DummyRetriever(),
-        SimpleExactRetriever(weight_lcs=0.3),
-        SimpleExactRetriever(weight_lcs=0.0),
-    ] + [FaissRetriever(Embedder(k)) for k in cfg.embedders]
+    key = sys.argv[1]
+    CONS.print(f"Running experiment: {key}", style="bold black on white", justify="center")
 
-    chunkers = [
-        TokenChunker(100, text_processing.tokenize_words),
-        TokenChunker(10, text_processing.tokenize_sentences),
-    ]
-
-    targets = [
-        HaystackTarget(load_all_md, c, r) for (c, r) in itertools.product(chunkers, retrievers)
-    ]
-
-    for needle_set in NEEDLE_DIR.glob("*/*.parquet"):
-        needles = [SpanNeedle(**r) for r in pl.read_parquet(needle_set).iter_rows(named=True)]
-
-        run_haystack_experiment(needles, targets, cfg.dataset.corpus_path, max_needles=5)
+    EXPERIMENTS[key]()
 
 
 if __name__ == "__main__":

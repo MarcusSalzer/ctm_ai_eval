@@ -1,5 +1,5 @@
 import random
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -15,7 +15,6 @@ from ctm_ai_eval.rag.datamodels import (
     RagChunk,
     SpanNeedle,
     SpanToken,
-    Tokenizer,
 )
 from ctm_ai_eval.rich_print import CONS
 
@@ -222,7 +221,7 @@ class SpanRephraser:
 
 def sample_span_needles_verbatim(
     docs: list[str],
-    tokenizer: Tokenizer,
+    tokenizer: Callable[[str], list[SpanToken]],
     *,
     max_count: int,
     min_tokens: int = 10,

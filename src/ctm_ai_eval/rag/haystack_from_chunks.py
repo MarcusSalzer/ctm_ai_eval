@@ -24,7 +24,6 @@ from typing import Literal
 import polars as pl
 import tqdm
 
-from ctm_ai_eval.io_util import load_all_md
 from ctm_ai_eval.rag import text_processing
 from ctm_ai_eval.rag.ai_retriever import Embedder, FaissRetriever
 from ctm_ai_eval.rag.chunking import TokenChunker
@@ -39,7 +38,7 @@ from ctm_ai_eval.rag.metrics import (
 from ctm_ai_eval.rag.needle_extraction import sample_chunk_needles_verbatim, sample_needles_llm
 from ctm_ai_eval.rich_print import CONS
 from ctm_ai_eval.utils.hashing import stable_hash
-from ctm_ai_eval.utils.paths import ExperimentPaths
+from ctm_ai_eval.utils.io_util import load_all_md
 
 PROMPT_DIR = Path("./assets/prompts")
 MAX_NEEDLES = 300
@@ -114,21 +113,19 @@ def _experiment(mode: Literal["query", "paraphrase", "verbatim"]):
         justify="center",
     )
 
-    PATHS = ExperimentPaths(exp_id)
-
     # store setup
-    pl.DataFrame([asdict(r) for r in chunks]).write_parquet(PATHS.haystack_chunks)
-    pl.DataFrame([asdict(r) for r in needles]).write_parquet(PATHS.haystack_needles)
+    pl.DataFrame([asdict(r) for r in chunks]).write_parquet("tmp/haystack_chunks.parquet")
+    pl.DataFrame([asdict(r) for r in needles]).write_parquet("tmp/haystack_chunk_needles.parquet")
 
     averages: list[Mapping[str, object]] = []
     for i, t in enumerate(TARGETS):
         print(f"\n target {i + 1}/{len(TARGETS)}  {t}")
 
         df = _run_target(t, chunks, needles, k_max=10)
-        df.write_parquet(PATHS.haystack_target_res(t.identifier))
+        df.write_parquet(f"tmp/haystack_res{i}.cparquet")
 
         mean_metrics = df.drop("chunk_id").mean().row(0, named=True)
-        averages.append({"target": t.identifier} | mean_metrics)
+        averages.append({"target": t.fingerprint} | mean_metrics)
 
     df_avg = pl.DataFrame(averages)
     print(df_avg)

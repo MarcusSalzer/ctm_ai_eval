@@ -1,6 +1,4 @@
-from pathlib import Path
 
-import polars as pl
 
 
 def infer_model_size(name: str) -> int:
