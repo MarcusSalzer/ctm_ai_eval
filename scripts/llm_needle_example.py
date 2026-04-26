@@ -2,10 +2,10 @@ import sys
 from pathlib import Path
 from typing import Literal
 
-from ctm_ai_eval.io_util import load_all_md
 from ctm_ai_eval.rag import text_processing
-from ctm_ai_eval.rag.chunking import TokenChunker
+from ctm_ai_eval.rag.chunkers.basic_chunking import TokenChunker
 from ctm_ai_eval.rag.needle_extraction import sample_needles_llm
+from ctm_ai_eval.utils.io_util import load_all_md
 
 
 def _llm_needle_example():

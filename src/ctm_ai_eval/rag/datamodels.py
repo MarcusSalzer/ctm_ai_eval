@@ -92,9 +92,9 @@ class Chunker(ABC):
 
 @dataclass
 class HaystackTarget:
-    loader: Callable[[Path], list[str]]
-    chunker: Chunker
-    retriever: Retriever
+    loader: Callable[[Path], list[str]]  # how to load a dir of documents
+    chunker: Chunker  # strings to chunks with metadata.
+    retriever: Retriever  # embedding and retrieval
 
     @property
     def fingerprint_dict(self) -> dict[str, str]:

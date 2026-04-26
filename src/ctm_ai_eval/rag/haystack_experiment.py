@@ -9,7 +9,8 @@ import tqdm
 
 from ctm_ai_eval.rag import text_processing
 from ctm_ai_eval.rag.ai_retriever import Embedder, FaissRetriever
-from ctm_ai_eval.rag.chunking import TokenChunker
+from ctm_ai_eval.rag.chunkers.basic_chunking import TokenChunker
+from ctm_ai_eval.rag.chunkers.chunk_markdown import MarkdownChunker
 from ctm_ai_eval.rag.config import HaystackMetricCfg, load_experiment_config
 from ctm_ai_eval.rag.datamodels import Chunker, HaystackTarget, Retriever, SpanNeedle
 from ctm_ai_eval.rag.dummy_retrievers import DummyRetriever, SimpleExactRetriever
@@ -58,7 +59,12 @@ def _run_haystack(
     *,
     result_dir: Path | str,
 ):
-    """Evaluate chunkers and retrievers on finding needles."""
+    """Evaluate a complete ingest-retrieve-pipeline.
+
+    NOTE: for interpretable results it is probably good keep 2 of the 3 things constant.
+          this can be either by separate experiment configurations,
+          or group/filter the result after.
+    """
     result_dir = Path(result_dir)
     result_dir.mkdir(parents=True, exist_ok=True)
 
@@ -81,7 +87,7 @@ def _run_haystack(
             run_id = stable_hash({"needle": needle_name} | t.fingerprint_dict)
 
             if run_id in done:
-                CONS.print(f"{run_id} done, skip.", style="yellow")
+                CONS.print(f"{run_id} ({t.fingerprint_tuple}) done, skip.", style="yellow")
                 continue
             CONS.print(
                 f"\nTarget {i + 1}/{len(targets)} {t.fingerprint_tuple}, {needle_name}",
@@ -125,11 +131,14 @@ def _targets_prod(chunkers: Iterable[Chunker], retrievers: Iterable[Retriever]):
 
 
 def haystack_chunk_size():
+    """Compare chunk sizes.
+    - This isn't really informative in terms of rr/recall, since larger chunks are always better.
+    """
     cfg = load_experiment_config()
     retrievers = [DummyRetriever(), FaissRetriever(Embedder("nomic-embed-text"))]
 
     chunkers = [
-        TokenChunker(k, text_processing.tokenize_words) for k in [20, 60, 100, 140, 180, 220, 300]
+        TokenChunker(k, 0, text_processing.tokenize_words) for k in [60, 100, 140, 180, 220]
     ]
 
     needle_files = NEEDLE_DIR.glob("*/*.ndjson")
@@ -146,18 +155,25 @@ def haystack_chunk_size():
     )
 
 
-def haystack_retrievers():
+def haystack_chunkers():
+    """Compare chunk sizes.
+    - This isn't really informative in terms of rr/recall, since larger chunks are always(?) better.
+    """
     cfg = load_experiment_config()
-
-    # include baselines and specified embedding models.
-    retrievers = [
-        DummyRetriever(),
-        SimpleExactRetriever(weight_lcs=0.3),
-    ] + [FaissRetriever(Embedder(k)) for k in cfg.targets.embedders]
+    retriever = FaissRetriever(Embedder("nomic-embed-text"))
 
     chunkers = [
-        TokenChunker(100, text_processing.tokenize_words),
+        MarkdownChunker(100, 0),
+        MarkdownChunker(100, 50),
+        MarkdownChunker(200, 0),
+        MarkdownChunker(200, 100),
+        TokenChunker(20, 0, text_processing.tokenize_words),
+        TokenChunker(20, 10, text_processing.tokenize_words),
+        TokenChunker(40, 0, text_processing.tokenize_words),
+        TokenChunker(40, 20, text_processing.tokenize_words),
     ]
+
+    targets = [HaystackTarget(load_all_md, c, retriever) for c in chunkers]
 
     needle_files = NEEDLE_DIR.glob("*/*.ndjson")
     if not needle_files:
@@ -166,7 +182,39 @@ def haystack_retrievers():
 
     _run_haystack(
         ((f.stem, load_ndjson_generic(f, SpanNeedle)) for f in needle_files),
-        _targets_prod(chunkers, retrievers),
+        targets,
+        cfg.dataset.corpus_path,
+        cfg.metrics,
+        result_dir="./tmp/results/haystack-chunkers",
+    )
+
+
+def haystack_retrievers():
+    """Compare retrievers.
+
+    - Possibly informative, as long asthe same chunking is used for all.
+    """
+    cfg = load_experiment_config()
+
+    # include baselines and specified embedding models.
+    retrievers = [
+        DummyRetriever(),
+        SimpleExactRetriever(weight_lcs=0.3),
+    ] + [FaissRetriever(Embedder(k)) for k in cfg.targets.embedders]
+
+    # A single chunker
+    chunker = TokenChunker(40, 20, text_processing.tokenize_words)
+
+    targets = [HaystackTarget(load_all_md, chunker, r) for r in retrievers]
+
+    needle_files = NEEDLE_DIR.glob("*/*.ndjson")
+    if not needle_files:
+        print(f"no needles found in {NEEDLE_DIR}, please generate first")
+        sys.exit(1)
+
+    _run_haystack(
+        ((f.stem, load_ndjson_generic(f, SpanNeedle)) for f in needle_files),
+        targets,
         cfg.dataset.corpus_path,
         cfg.metrics,
         result_dir="./tmp/results/haystack_retrievers",

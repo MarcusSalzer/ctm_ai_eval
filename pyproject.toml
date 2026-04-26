@@ -44,10 +44,6 @@ root_packages = ["ctm-ai-eval"]
 
 [[tool.importlinter.contracts]]
 
-[[tool.importlinter.contracts]]
-name = "Task specific submodules are indpendent."
-type = "independence"
-modules = ["ctm-ai-eval.qa", "ctm-ai-eval.rag"]
 
 [[tool.importlinter.contracts]]
 name = "Don't import scripts to src"

@@ -117,24 +117,32 @@ def rag_target_recall_avg(df: pl.DataFrame, name_col: str = "target"):
     )
 
 
-def reciprocal_rank_bar(df: pl.DataFrame, x: str = "run_id"):
+def multi_metric_bar(df: pl.DataFrame, x: str = "run_id"):
     """Comparison of rr"""
     return go.Figure(
-        go.Bar(x=df[x], y=df["rr"]),
+        [
+            go.Bar(x=df[x], y=df["rr"], name="rr"),
+            go.Bar(x=df[x], y=df["soft_rr"], name="rr (soft)"),
+            go.Bar(x=df[x], y=df["recall@1"], name="recall@1"),
+        ],
         layout=go.Layout(
             xaxis_title="Target",
-            yaxis_title="Reciprocal rank",
-            title="Average inverse rank of 'correct' (ideal=1.0)",
         ),
     )
 
 
-def scatter_recall_rr(df: pl.DataFrame, color_by: str = "run_id", k: int = 5):
+def scatter_recall_rr(
+    df: pl.DataFrame,
+    color_by: str = "run_id",
+    text_by: str | None = None,
+    k: int = 5,
+):
 
     return px.scatter(
         df.with_columns(pl.col("t_retr").round(2)),
         x=f"recall@{k}",
         y="rr",
         color=color_by,
-        hover_data=["chunker", "retriever"],
+        text=text_by,
+        hover_data=["chunker", "retriever", "t_retr"],
     ).update_traces(marker_size=8)

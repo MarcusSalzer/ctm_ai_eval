@@ -6,6 +6,10 @@ from pathlib import Path
 import tqdm
 
 from ctm_ai_eval.qa.datamodels import EvalTrace, QaQuestion
+from ctm_ai_eval.rag.ai_retriever import FaissRetriever
+from ctm_ai_eval.rag.chunkers.chunk_markdown import MarkdownChunker
+from ctm_ai_eval.rag.config import load_experiment_config
+from ctm_ai_eval.rag.datamodels import HaystackTarget
 from ctm_ai_eval.rich_print import CONS
 from ctm_ai_eval.utils import io_util
 
@@ -17,18 +21,37 @@ from ctm_ai_eval.qa import targets
 SERVER_URL = "http://localhost:5000"
 DATASET_NAME = "general_qa_python"
 SYS_PROMPT_DIR = Path("./assets/prompts/chat_system_prompts")
+cfg = load_experiment_config()
 
-TARGETS = [
-    targets.OllamaChatTarget(
+TARGETS: list[targets.ApiTarget] = [
+    # targets.RagApiTarget(
+    #     targets.ChatTargetConfig(
+    #         model="gemma3:1b-it-qat",
+    #         temperature=0.0,
+    #         system_prompt_id="concise",
+    #     ),
+    #     haystack=HaystackTarget(io_util.load_all_md, MarkdownChunker(200, 100), FaissRetriever()),
+    #     docs_dir=cfg.dataset.corpus_path,
+    # ),
+    # targets.OpenAIChatTarget(
+    #     targets.ChatTargetConfig(
+    #         model="gemma3:1b-it-qat",
+    #         temperature=0.0,
+    #         system_prompt_id="concise",
+    #     ),
+    # ),
+    targets.RagApiTarget(
         targets.ChatTargetConfig(
-            model="gemma3:1b-it-qat",
+            model="gemma4:e2b",
             temperature=0.0,
             system_prompt_id="concise",
         ),
+        haystack=HaystackTarget(io_util.load_all_md, MarkdownChunker(200, 100), FaissRetriever()),
+        docs_dir=cfg.dataset.corpus_path,
     ),
-    targets.OllamaChatTarget(
+    targets.OpenAIChatTarget(
         targets.ChatTargetConfig(
-            model="qwen2.5-coder:0.5b",
+            model="gemma4:e2b",
             temperature=0.0,
             system_prompt_id="concise",
         ),
@@ -36,7 +59,7 @@ TARGETS = [
 ]
 
 
-def run_eval(
+def trace_one_target(
     dataset_name: str,
     target: targets.ApiTarget,
 ) -> None:
@@ -62,6 +85,9 @@ def run_eval(
             ex.to_question_string(),
             sys_prompts[target.chat_config.system_prompt_id],
         )
+        rag_config = (
+            target.haystack.fingerprint_dict if isinstance(target, targets.RagApiTarget) else None
+        )
         r = EvalTrace(
             run_id=run_id,
             dataset_name=dataset_name,
@@ -71,6 +97,7 @@ def run_eval(
             answer=result.text,
             latency_ms=result.latency_ms,
             target_cfg=target.chat_config.model_dump(),
+            rag_cfg=rag_config,
             local_host=platform.node(),
         )
         io_util.append_ndjson(traces_file, [r])
@@ -81,7 +108,11 @@ def qa_trace() -> None:
 
     for targ in TARGETS:
         CONS.print(targ)
-        run_eval(DATASET_NAME, targ)
+        if isinstance(targ, targets.RagApiTarget):
+            print("RAG-target: ingesting...")
+            targ.ensure_ingested()
+            print("RAG-target: ingest ok!")
+        trace_one_target(DATASET_NAME, targ)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ctm_ai_eval.rag.datamodels import RetrievalResult
+
 
 class QaQuestion(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -25,6 +27,8 @@ class ApiEvalResponse(BaseModel):
     raw: dict[str, Any]
     latency_ms: int
     text: str | None
+    # optional, for rag targets
+    retrieved: list[RetrievalResult] | None = None
 
 
 class EvalTrace(BaseModel):
@@ -38,6 +42,7 @@ class EvalTrace(BaseModel):
     answer: str | None
     latency_ms: int
     target_cfg: dict[str, object]
+    rag_cfg: dict[str, str] | None
     local_host: str  # Where did the eval run
 
 

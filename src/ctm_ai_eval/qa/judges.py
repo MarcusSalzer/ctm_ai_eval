@@ -87,7 +87,9 @@ class HumanRatingJudge:
         print(f"\n=== Expected answer ===\n{question.answer}\n")
         print(f"\n=== Answer ===\n{answer}\n")
 
-        return float(input("-> rating? [0,1] "))
+        v = float(input("-> rating? [0,1] "))
+        assert 0 <= v <= 1, "range!"
+        return v
 
     def _fingerprint(self, question: QaQuestion, answer: str) -> str:
         s = (

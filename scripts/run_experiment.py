@@ -4,16 +4,21 @@ import sys
 
 from ctm_ai_eval.qa.eval_runs import qa_compute_metrics
 from ctm_ai_eval.qa.qa_experiment import qa_trace
-from ctm_ai_eval.rag.haystack_experiment import haystack_chunk_size, haystack_retrievers
+from ctm_ai_eval.rag.haystack_experiment import (
+    haystack_chunk_size,
+    haystack_chunkers,
+    haystack_retrievers,
+)
 from ctm_ai_eval.rich_print import CONS
 
 EXPERIMENTS = {
     # rag
-    "haystack-retrievers": haystack_retrievers,
-    "haystack-chunksize": haystack_chunk_size,
+    "retrievers": haystack_retrievers,
+    "chunkers": haystack_chunkers,
+    "chunksize": haystack_chunk_size,
     # qa
-    "qa-trace": qa_trace,
-    "qa-metrics": qa_compute_metrics,
+    "qa_trace": qa_trace,
+    "qa_metrics": qa_compute_metrics,
 }
 
 
