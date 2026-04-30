@@ -48,6 +48,22 @@
     "source": "python 3.13.3"
   },
   {
+    "example_id": "q7",
+    "author": "marcus",
+    "question": "I have a requirements.txt, how can I install them all using pip?",
+    "context": "",
+    "answer": "Run `pip install -r requirements.txt` to install all dependencies from the file.",
+    "source": "python 3.13.3"
+  },
+  {
+    "example_id": "q8",
+    "author": "marcus",
+    "question": "What do the | and & operators do for sets in python?",
+    "context": "",
+    "answer": "They compute union and intersection respectively. Use `|` to get a set of all elements from either operand (union), and use `&` to get all elements that are in both sets (intersection).",
+    "source": "python 3.13.3"
+  },
+  {
     "example_id": "cf1",
     "author": "marcus",
     "question": "Which is immutable, list or tuple?",

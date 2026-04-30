@@ -24,24 +24,6 @@ def tokenize_sentences(text: str) -> list[SpanToken]:
     return spans
 
 
-def tokenize_sentence_windows(text: str, window_size: int = 3):
-    sents = tokenize_sentences(text)
-    out: list[SpanToken] = []
-
-    for i in range(len(sents)):
-        window = sents[i : i + window_size]
-        if not window:
-            continue
-
-        start = window[0].start
-        end = window[-1].end
-        span_text = text[start:end]
-
-        out.append(SpanToken(span_text, start, end))
-
-    return out
-
-
 def longest_common_substring(a: str, b: str) -> int:
     """Length of longest common substring (DP, O(n*m), fine for baseline)."""
     if not a or not b:

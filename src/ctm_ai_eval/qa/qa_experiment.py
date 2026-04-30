@@ -33,13 +33,13 @@ TARGETS: list[targets.ApiTarget] = [
     #     haystack=HaystackTarget(io_util.load_all_md, MarkdownChunker(200, 100), FaissRetriever()),
     #     docs_dir=cfg.dataset.corpus_path,
     # ),
-    # targets.OpenAIChatTarget(
-    #     targets.ChatTargetConfig(
-    #         model="gemma3:1b-it-qat",
-    #         temperature=0.0,
-    #         system_prompt_id="concise",
-    #     ),
-    # ),
+    targets.OpenAIChatTarget(
+        targets.ChatTargetConfig(
+            model="gemma3:1b-it-qat",
+            temperature=0.0,
+            system_prompt_id="concise",
+        ),
+    ),
     targets.RagApiTarget(
         targets.ChatTargetConfig(
             model="gemma4:e2b",
@@ -80,7 +80,8 @@ def trace_one_target(
     target.ask("hello", None)
 
     print(f"running {run_id} ({dataset_name=})")
-    for ex in tqdm.tqdm(examples):
+    prog = tqdm.tqdm(examples, ncols=0)
+    for ex in prog:
         result = target.ask(
             ex.to_question_string(),
             sys_prompts[target.chat_config.system_prompt_id],
@@ -100,6 +101,8 @@ def trace_one_target(
             rag_cfg=rag_config,
             local_host=platform.node(),
         )
+        if r.answer:
+            prog.set_description(f"{ex.question[:10]} ->  {r.answer[:60].replace('\n', ' ')}")
         io_util.append_ndjson(traces_file, [r])
 
 
